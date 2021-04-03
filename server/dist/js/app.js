@@ -29,6 +29,7 @@ const routes_1 = __importDefault(require("./routes"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 const app = express_1.default();
+app.use(express_1.default.json());
 const PORT = process.env.PORT || 4000;
 app.use(cors_1.default());
 app.use(routes_1.default);
@@ -46,5 +47,6 @@ mongoose_1.default
     .connect(uri, options)
     .then(() => app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`)))
     .catch(error => {
-    throw error;
+    console.log(error);
+    console.log(`Error when connecting to MongoDB instance: ${uri}`);
 });

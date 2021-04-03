@@ -26,6 +26,8 @@ const getTodos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getTodos = getTodos;
 const addTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log("Got add request:");
+        console.log(req.body);
         const body = req.body;
         const todo = new todo_1.default({
             name: body.name,
@@ -39,7 +41,8 @@ const addTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .json({ message: "Todo added", todo: newTodo, todos: allTodos });
     }
     catch (error) {
-        throw error;
+        console.log("Error when adding todo:");
+        res.status(500).json({ message: `Todo add failed: ${error}` });
     }
 });
 exports.addTodo = addTodo;

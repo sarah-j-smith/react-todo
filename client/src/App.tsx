@@ -1,69 +1,119 @@
-import React, { useEffect, useState } from 'react'
 import TodoItem from './components/TodoItem'
 import AddTodo from './components/AddTodo'
 import { getTodos, addTodo, updateTodo, deleteTodo } from './API'
 
-const App: React.FC = () => {
-  const [todos, setTodos] = useState<ITodo[]>([])
+import * as appStyles from './App.module.scss';
 
-  useEffect(() => {
-    fetchTodos()
-  }, [])
+import Container from 'react-bootstrap/Container';
+import { Col, Jumbotron, Row } from 'react-bootstrap';
+import React from 'react';
 
-  const fetchTodos = (): void => {
-    getTodos()
-    .then(({ data: { todos } }: ITodo[] | any) => setTodos(todos))
-    .catch((err: Error) => console.log(err))
-  }
+type StateType = {
+    todos: ITodo[]
+}
 
-  const handleSaveTodo = (e: React.FormEvent, formData: ITodo): void => {
-    e.preventDefault()
-    addTodo(formData)
-      .then(({ status, data }) => {
-        if (status !== 201) {
-          throw new Error("Error! Todo not saved")
+type PropType = null | any
+
+class App extends React.Component<PropType, StateType> {
+
+    constructor(props: any) {
+        super(props);
+
+        // note re initialisation of state:
+        //   1. don't copy props into state - acesss it directly from this.props
+        //   2. don't call setState( ...something ) in constructor
+        //
+        //   https://stackoverflow.com/a/47341539/813919
+        //
+        // on modern (es6+) compilers can just use
+        //  state = { todos: [] } and eschew/elide the constructor
+        //
+        this.state = {
+            todos: []
         }
-        setTodos(data.todos)
-      })
-      .catch(err => console.log(err))
-  }
+    }
 
-  const handleUpdateTodo = (todo: ITodo): void => {
-    updateTodo(todo)
-      .then(({ status, data }) => {
-        if (status !== 200) {
-          throw new Error("Error! Todo not updated")
-        }
-        setTodos(data.todos)
-      })
-      .catch(err => console.log(err))
-  }
-  
-  const handleDeleteTodo = (_id: string): void => {
-    deleteTodo(_id)
-      .then(({ status, data }) => {
-        if (status !== 200) {
-          throw new Error("Error! Todo not deleted")
-        }
-        setTodos(data.todos)
-      })
-      .catch(err => console.log(err))
-  }
+    setTodos(udpatedTodos: ITodo[]) {
+        // replace whatever the current array of tood items is with the argument
+        // "updatedTodo's", while keeping any other state as it currently is
+        this.setState({ ...this.state, todos: udpatedTodos })
+    }
 
-  return (
-    <main className='App'>
-      <h1>My Todos</h1>
-      <AddTodo saveTodo={handleSaveTodo} />
-      {todos.map((todo: ITodo) => (
-        <TodoItem
-          key={todo._id}
-          updateTodo={handleUpdateTodo}
-          deleteTodo={handleDeleteTodo}
-          todo={todo}
-        />
-      ))}
-    </main>
-  )
+    todos(): ITodo[] {
+        return this.state.todos;
+    }
+
+    componentDidMount() {
+        this.fetchTodos();
+    }
+
+    fetchTodos() {
+        getTodos()
+            .then(({ data: { todos } }: ITodo[] | any) => this.setTodos(todos))
+            .catch((err: Error) => console.log(err))
+    }
+
+    handleSaveTodo(e: React.FormEvent, formData: ITodo) {
+        e.preventDefault()
+        addTodo(formData)
+            .then(({ status, data }) => {
+                if (status !== 201) {
+                    throw new Error("Error! Todo not saved")
+                }
+                this.setTodos(data.todos)
+            })
+            .catch(err => console.log(err))
+    }
+
+    handleUpdateTodo(todo: ITodo) {
+        updateTodo(todo)
+            .then(({ status, data }) => {
+                if (status !== 200) {
+                    throw new Error("Error! Todo not updated")
+                }
+                this.setTodos(data.todos)
+            })
+            .catch(err => console.log(err))
+    }
+
+    handleDeleteTodo(_id: string) {
+        deleteTodo(_id)
+            .then(({ status, data }) => {
+                if (status !== 200) {
+                    throw new Error("Error! Todo not deleted")
+                }
+                this.setTodos(data.todos)
+            })
+            .catch(err => console.log(err))
+    }
+
+    render() {
+        return (
+            <Container>
+                <Jumbotron>
+                    <h1>To-do Manager</h1>
+                </Jumbotron>
+                <Row>
+                    <Col className={appStyles.AddContainer}>
+                        <h2>Add</h2>
+                        <AddTodo saveTodo={this.handleSaveTodo} />
+                    </Col>
+                </Row>
+                {this.todos().map((todo: ITodo) => (
+                    <Row>
+                        <Col>
+                            <TodoItem
+                                key={todo._id}
+                                updateTodo={this.handleUpdateTodo}
+                                deleteTodo={this.handleDeleteTodo}
+                                todo={todo}
+                            />
+                        </Col>
+                    </Row>
+                ))}
+            </Container>
+        );
+    }
 }
 
 export default App
